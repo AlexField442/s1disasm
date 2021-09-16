@@ -1,7 +1,7 @@
 s1disasm_git
 ============
 
-The very latest Sonic 1 Disassembly.
+An optimized version of the Sonic 1 disassembly.
 
 See: http://info.sonicretro.org/Disassemblies
 
