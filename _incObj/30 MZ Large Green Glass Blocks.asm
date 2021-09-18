@@ -176,8 +176,6 @@ loc_B54E:
 		tst.b	$34(a0)
 		bne.s	loc_B582
 		move.b	#1,$34(a0)
-		bset	#0,$35(a0)
-		beq.s	loc_B582
 		bset	#7,$34(a0)
 		move.w	#$10,$36(a0)
 		move.b	#$A,$38(a0)

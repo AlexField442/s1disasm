@@ -32,11 +32,6 @@ LBall_Main:	; Routine 0
 		move.b	#3,obPriority(a0)
 		move.b	#$8B,obColType(a0)
 		move.w	obY(a0),$30(a0)
-		tst.b	$29(a0)
-		beq.s	@speed
-		addq.b	#2,obPriority(a0)
-
-	@speed:
 		moveq	#0,d0
 		move.b	obSubtype(a0),d0
 		add.w	d0,d0

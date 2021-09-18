@@ -46,7 +46,6 @@ Jun_Main:	; Routine 0
 
 		move.b	#$30,obActWid(a0)
 		move.b	#4,obPriority(a0)
-		move.w	#$3C,$30(a0)
 		move.b	#1,jun_frame(a0)
 		move.b	obSubtype(a0),jun_switch(a0)
 

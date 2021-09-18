@@ -291,7 +291,6 @@ loc_1BBF4:
 		move.w	#0,(v_ssrotate).w
 		move.w	#$4000,(v_ssangle).w
 		addq.b	#2,obRoutine(a0)
-		move.w	#$3C,$38(a0)
 
 loc_1BC12:
 		move.w	(v_ssangle).w,d0
@@ -304,11 +303,13 @@ loc_1BC12:
 ; ===========================================================================
 
 Obj09_Exit2:
+	if OptimiseGame=0
 		subq.w	#1,$38(a0)
 		bne.s	loc_1BC40
 		move.b	#id_Level,(v_gamemode).w
 
 loc_1BC40:
+	endif
 		jsr	(Sonic_Animate).l
 		jsr	(Sonic_LoadGfx).l
 		bsr.w	SS_FixCamera
