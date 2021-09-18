@@ -1,15 +1,7 @@
-; ---------------------------------------------------------------------------
-; Modified SMPS 68k Type 1b sound driver
-; ---------------------------------------------------------------------------
-; Go_SoundTypes:
-Go_SoundPriorities:	dc.l SoundPriorities
-; Go_SoundD0:
-Go_SpecSoundIndex:	dc.l SpecSoundIndex
-Go_MusicIndex:		dc.l MusicIndex
-Go_SoundIndex:		dc.l SoundIndex
-; off_719A0:
-Go_SpeedUpIndex:	dc.l SpeedUpIndex
-Go_PSGIndex:		dc.l PSG_Index
+; A *modified* SMPS 68k Type 1b sound driver.
+; Pointers would normally be here, but I removed them since direct
+; jumps would be faster anyways.
+
 ; ---------------------------------------------------------------------------
 ; PSG instruments used in music
 ; ---------------------------------------------------------------------------
@@ -98,7 +90,7 @@ SoundPriorities:
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to update music more than once per frame
-; (Called by horizontal & vert. interrupts)
+; (called by horizontal & vert. interrupts)
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
@@ -597,7 +589,7 @@ PauseMusic:
 
 ; Sound_Play:
 CycleSoundQueue:
-		movea.l	(Go_SoundPriorities).l,a0
+		lea	(SoundPriorities).l,a0
 		lea	v_soundqueue0(a6),a1	; load music track number
 		move.b	v_sndprio(a6),d3	; Get priority of currently playing SFX
 		moveq	#2,d4			; Number of queues-1 (v_soundqueue0, v_soundqueue1, v_soundqueue2)
@@ -748,10 +740,10 @@ Sound_PlayBGM:
 ; loc_7202C:
 @bgm_loadMusic:
 		jsr	InitMusicPlayback(pc)
-		movea.l	(Go_SpeedUpIndex).l,a4
+		lea	(SpeedUpIndex).l,a4
 		subi.b	#bgm__First,d7
 		move.b	(a4,d7.w),v_speeduptempo(a6)
-		movea.l	(Go_MusicIndex).l,a4
+		lea	(MusicIndex).l,a4
 		lsl.w	#2,d7
 		movea.l	(a4,d7.w),a4		; a4 now points to (uncompressed) song data
 		moveq	#0,d0
@@ -938,7 +930,7 @@ Sound_PlaySFX:
 		move.b	#$80,f_push_playing(a6)	; Mark it as playing
 ; Sound_notA7:
 @sfx_notPush:
-		movea.l	(Go_SoundIndex).l,a0
+		lea	(SoundIndex).l,a0
 		subi.b	#sfx__First,d7		; Make it 0-based
 		lsl.w	#2,d7			; Convert sfx ID into index
 		movea.l	(a0,d7.w),a3		; SFX data pointer
@@ -1058,7 +1050,7 @@ Sound_PlaySpecial:
 		bne.w	@locret			; Exit if it is
 		tst.b	f_fadein_flag(a6)	; Is music being faded in?
 		bne.w	@locret			; Exit if it is
-		movea.l	(Go_SpecSoundIndex).l,a0
+		lea	(SpecSoundIndex).l,a0
 		subi.b	#spec__First,d7		; Make it 0-based
 		lsl.w	#2,d7
 		movea.l	(a0,d7.w),a3
@@ -1816,7 +1808,7 @@ PSGDoVolFX:
 		moveq	#0,d0
 		move.b	TrackVoiceIndex(a5),d0	; Get PSG tone
 		beq.s	SetPSGVolume
-		movea.l	(Go_PSGIndex).l,a0
+		lea	(PSG_Index).l,a0
 		subq.w	#1,d0
 		lsl.w	#2,d0
 		movea.l	(a0,d0.w),a0
