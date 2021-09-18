@@ -303,13 +303,6 @@ loc_1BC12:
 ; ===========================================================================
 
 Obj09_Exit2:
-	if OptimiseGame=0
-		subq.w	#1,$38(a0)
-		bne.s	loc_1BC40
-		move.b	#id_Level,(v_gamemode).w
-
-loc_1BC40:
-	endif
 		jsr	(Sonic_Animate).l
 		jsr	(Sonic_LoadGfx).l
 		bsr.w	SS_FixCamera

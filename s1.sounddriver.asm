@@ -500,7 +500,7 @@ FMUpdateFreq:
 		jsr	WriteFMIorII(pc)
 		move.b	d6,d1
 		move.b	#$A0,d0			; Register for lower 8 bits of frequency
-		jsr	WriteFMIorII(pc)	; (It would be better if this were a jmp)
+		jmp	WriteFMIorII(pc)
 ; locret_71E48:
 locret_71E48:
 		rts	
@@ -1701,8 +1701,7 @@ PSGUpdateTrack:
 		jsr	NoteTimeoutUpdate(pc)
 		jsr	PSGUpdateVolFX(pc)
 		jsr	DoModulation(pc)
-		jsr	PSGUpdateFreq(pc)	; It would be better if this were a jmp and the rts was removed
-		rts
+		jmp	PSGUpdateFreq(pc)
 ; End of function PSGUpdateTrack
 
 
@@ -1812,7 +1811,7 @@ PSGUpdateVolFX:
 		tst.b	TrackVoiceIndex(a5)	; Test PSG tone
 		beq.w	locret_7298A		; Return if it is zero
 ; loc_7292E:
-PSGDoVolFX:	; This can actually be made a bit more efficient, see the comments for more
+PSGDoVolFX:
 		move.b	TrackVolume(a5),d6	; Get volume
 		moveq	#0,d0
 		move.b	TrackVoiceIndex(a5),d0	; Get PSG tone
@@ -1821,13 +1820,10 @@ PSGDoVolFX:	; This can actually be made a bit more efficient, see the comments f
 		subq.w	#1,d0
 		lsl.w	#2,d0
 		movea.l	(a0,d0.w),a0
-		move.b	TrackVolEnvIndex(a5),d0	; Get volume envelope index		; move.b	TrackVolEnvIndex(a5),d0
-		move.b	(a0,d0.w),d0			; Volume envelope value			; addq.b	#1,TrackVolEnvIndex(a5)
-		addq.b	#1,TrackVolEnvIndex(a5)	; Increment volume envelope index	; move.b	(a0,d0.w),d0
-		btst	#7,d0				; Is volume envelope value negative?	; <-- makes this line redundant
-		beq.s	@gotflutter			; Branch if not				; but you gotta make this one a bpl
-		cmpi.b	#$80,d0				; Is it the terminator?			; Since this is the only check, you can take the optimisation a step further:
-		beq.s	VolEnvHold			; If so, branch				; Change the previous beq (bpl) to a bmi and make it branch to VolEnvHold to make these last two lines redundant
+		move.b	TrackVolEnvIndex(a5),d0	; Get volume envelope index
+		addq.b	#1,TrackVolEnvIndex(a5) ; Increment volume envelope index
+		move.b	(a0,d0.w),d0		; Volume envelope index
+		bmi.s	VolEnvHold		; Branch if it is terminator
 ; loc_72960:
 @gotflutter:
 		add.w	d0,d6		; Add volume envelope value to volume
@@ -2214,7 +2210,7 @@ SetVoice:
 		
 		move.b	#$B4,d0			; Register for AMS/FMS/Panning
 		move.b	TrackAMSFMSPan(a5),d1	; Value to send
-		jsr	WriteFMIorII(pc) 	; (It would be better if this were a jmp)
+		jmp	WriteFMIorII(pc)
 
 locret_72CAA:
 		rts	
