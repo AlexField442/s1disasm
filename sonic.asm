@@ -5317,10 +5317,7 @@ LevLoad_ClrRam:
 LevelLayoutLoad2:
 		move.w	(v_zone).w,d0
 		lsl.b	#6,d0
-		lsr.w	#5,d0
-		move.w	d0,d2
-		add.w	d0,d0
-		add.w	d2,d0
+		lsr.w	#4,d0
 		add.w	d1,d0
 		lea	(Level_Index).l,a1
 		move.w	(a1,d0.w),d0
@@ -9000,73 +8997,67 @@ Art_SbzSmoke:	incbin	"artunc\SBZ Background Smoke.bin"
 
 ; ---------------------------------------------------------------------------
 ; Level	layout index
+; Optimized to only use two entries instead of three (the third was unused
+; anyways), might change one day to use the Sonic 2 level format.
 ; ---------------------------------------------------------------------------
 Level_Index:
 		; GHZ
-		dc.w Level_GHZ1-Level_Index, Level_GHZbg-Level_Index, byte_68D70-Level_Index
-		dc.w Level_GHZ2-Level_Index, Level_GHZbg-Level_Index, byte_68E3C-Level_Index
-		dc.w Level_GHZ3-Level_Index, Level_GHZbg-Level_Index, byte_68F84-Level_Index
-		dc.w byte_68F88-Level_Index, byte_68F88-Level_Index, byte_68F88-Level_Index
+		dc.w Level_GHZ1-Level_Index, Level_GHZbg-Level_Index
+		dc.w Level_GHZ2-Level_Index, Level_GHZbg-Level_Index
+		dc.w Level_GHZ3-Level_Index, Level_GHZbg-Level_Index
+		dc.w Level_Null-Level_Index, Level_Null-Level_Index
 		; LZ
-		dc.w Level_LZ1-Level_Index, Level_LZbg-Level_Index, byte_69190-Level_Index
-		dc.w Level_LZ2-Level_Index, Level_LZbg-Level_Index, byte_6922E-Level_Index
-		dc.w Level_LZ3-Level_Index, Level_LZbg-Level_Index, byte_6934C-Level_Index
-		dc.w Level_SBZ3-Level_Index, Level_LZbg-Level_Index, byte_6940A-Level_Index
+		dc.w Level_LZ1-Level_Index, Level_LZbg-Level_Index
+		dc.w Level_LZ2-Level_Index, Level_LZbg-Level_Index
+		dc.w Level_LZ3-Level_Index, Level_LZbg-Level_Index
+		dc.w Level_SBZ3-Level_Index, Level_LZbg-Level_Index
 		; MZ
-		dc.w Level_MZ1-Level_Index, Level_MZ1bg-Level_Index, Level_MZ1-Level_Index
-		dc.w Level_MZ2-Level_Index, Level_MZ2bg-Level_Index, byte_6965C-Level_Index
-		dc.w Level_MZ3-Level_Index, Level_MZ3bg-Level_Index, byte_697E6-Level_Index
-		dc.w byte_697EA-Level_Index, byte_697EA-Level_Index, byte_697EA-Level_Index
+		dc.w Level_MZ1-Level_Index, Level_MZ1bg-Level_Index
+		dc.w Level_MZ2-Level_Index, Level_MZ2bg-Level_Index
+		dc.w Level_MZ3-Level_Index, Level_MZ3bg-Level_Index
+		dc.w Level_Null-Level_Index, Level_Null-Level_Index
 		; SLZ
-		dc.w Level_SLZ1-Level_Index, Level_SLZbg-Level_Index, byte_69B84-Level_Index
-		dc.w Level_SLZ2-Level_Index, Level_SLZbg-Level_Index, byte_69B84-Level_Index
-		dc.w Level_SLZ3-Level_Index, Level_SLZbg-Level_Index, byte_69B84-Level_Index
-		dc.w byte_69B84-Level_Index, byte_69B84-Level_Index, byte_69B84-Level_Index
+		dc.w Level_SLZ1-Level_Index, Level_SLZbg-Level_Index
+		dc.w Level_SLZ2-Level_Index, Level_SLZbg-Level_Index
+		dc.w Level_SLZ3-Level_Index, Level_SLZbg-Level_Index
+		dc.w Level_Null-Level_Index, Level_Null-Level_Index
 		; SYZ
-		dc.w Level_SYZ1-Level_Index, Level_SYZbg-Level_Index, byte_69C7E-Level_Index
-		dc.w Level_SYZ2-Level_Index, Level_SYZbg-Level_Index, byte_69D86-Level_Index
-		dc.w Level_SYZ3-Level_Index, Level_SYZbg-Level_Index, byte_69EE4-Level_Index
-		dc.w byte_69EE8-Level_Index, byte_69EE8-Level_Index, byte_69EE8-Level_Index
+		dc.w Level_SYZ1-Level_Index, Level_SYZbg-Level_Index
+		dc.w Level_SYZ2-Level_Index, Level_SYZbg-Level_Index
+		dc.w Level_SYZ3-Level_Index, Level_SYZbg-Level_Index
+		dc.w Level_Null-Level_Index, Level_Null-Level_Index
 		; SBZ
-		dc.w Level_SBZ1-Level_Index, Level_SBZ1bg-Level_Index, Level_SBZ1bg-Level_Index
-		dc.w Level_SBZ2-Level_Index, Level_SBZ2bg-Level_Index, Level_SBZ2bg-Level_Index
-		dc.w Level_SBZ2-Level_Index, Level_SBZ2bg-Level_Index, byte_6A2F8-Level_Index
-		dc.w byte_6A2FC-Level_Index, byte_6A2FC-Level_Index, byte_6A2FC-Level_Index
-		zonewarning Level_Index,24
+		dc.w Level_SBZ1-Level_Index, Level_SBZ1bg-Level_Index
+		dc.w Level_SBZ2-Level_Index, Level_SBZ2bg-Level_Index
+		dc.w Level_SBZ2-Level_Index, Level_SBZ2bg-Level_Index
+		dc.w Level_Null-Level_Index, Level_Null-Level_Index
+		zonewarning Level_Index,16
 		; Ending
-		dc.w Level_End-Level_Index, Level_GHZbg-Level_Index, byte_6A320-Level_Index
-		dc.w Level_End-Level_Index, Level_GHZbg-Level_Index, byte_6A320-Level_Index
-		dc.w byte_6A320-Level_Index, byte_6A320-Level_Index, byte_6A320-Level_Index
-		dc.w byte_6A320-Level_Index, byte_6A320-Level_Index, byte_6A320-Level_Index
+		dc.w Level_End-Level_Index, Level_GHZbg-Level_Index
+		dc.w Level_End-Level_Index, Level_GHZbg-Level_Index
+		dc.w Level_Null-Level_Index, Level_Null-Level_Index
+		dc.w Level_Null-Level_Index, Level_Null-Level_Index
+
+Level_Null:	dc.b 0, 0, 0, 0
 
 Level_GHZ1:	incbin	"levels\ghz1.bin"
 		even
-byte_68D70:	dc.b 0,	0, 0, 0
 Level_GHZ2:	incbin	"levels\ghz2.bin"
 		even
-byte_68E3C:	dc.b 0,	0, 0, 0
 Level_GHZ3:	incbin	"levels\ghz3.bin"
 		even
 Level_GHZbg:	incbin	"levels\ghzbg.bin"
 		even
-byte_68F84:	dc.b 0,	0, 0, 0
-byte_68F88:	dc.b 0,	0, 0, 0
-
 Level_LZ1:	incbin	"levels\lz1.bin"
 		even
 Level_LZbg:	incbin	"levels\lzbg.bin"
 		even
-byte_69190:	dc.b 0,	0, 0, 0
 Level_LZ2:	incbin	"levels\lz2.bin"
 		even
-byte_6922E:	dc.b 0,	0, 0, 0
 Level_LZ3:	incbin	"levels\lz3.bin"
 		even
-byte_6934C:	dc.b 0,	0, 0, 0
 Level_SBZ3:	incbin	"levels\sbz3.bin"
 		even
-byte_6940A:	dc.b 0,	0, 0, 0
-
 Level_MZ1:	incbin	"levels\mz1.bin"
 		even
 Level_MZ1bg:	incbin	"levels\mz1bg.bin"
@@ -9075,14 +9066,10 @@ Level_MZ2:	incbin	"levels\mz2.bin"
 		even
 Level_MZ2bg:	incbin	"levels\mz2bg.bin"
 		even
-byte_6965C:	dc.b 0,	0, 0, 0
 Level_MZ3:	incbin	"levels\mz3.bin"
 		even
 Level_MZ3bg:	incbin	"levels\mz3bg.bin"
 		even
-byte_697E6:	dc.b 0,	0, 0, 0
-byte_697EA:	dc.b 0,	0, 0, 0
-
 Level_SLZ1:	incbin	"levels\slz1.bin"
 		even
 Level_SLZbg:	incbin	"levels\slzbg.bin"
@@ -9091,8 +9078,6 @@ Level_SLZ2:	incbin	"levels\slz2.bin"
 		even
 Level_SLZ3:	incbin	"levels\slz3.bin"
 		even
-byte_69B84:	dc.b 0,	0, 0, 0
-
 Level_SYZ1:	incbin	"levels\syz1.bin"
 		even
 Level_SYZbg:	if Revision=0
@@ -9101,15 +9086,10 @@ Level_SYZbg:	if Revision=0
 		incbin	"levels\syzbg (JP1).bin"
 		endc
 		even
-byte_69C7E:	dc.b 0,	0, 0, 0
 Level_SYZ2:	incbin	"levels\syz2.bin"
 		even
-byte_69D86:	dc.b 0,	0, 0, 0
 Level_SYZ3:	incbin	"levels\syz3.bin"
 		even
-byte_69EE4:	dc.b 0,	0, 0, 0
-byte_69EE8:	dc.b 0,	0, 0, 0
-
 Level_SBZ1:	incbin	"levels\sbz1.bin"
 		even
 Level_SBZ1bg:	incbin	"levels\sbz1bg.bin"
@@ -9118,11 +9098,8 @@ Level_SBZ2:	incbin	"levels\sbz2.bin"
 		even
 Level_SBZ2bg:	incbin	"levels\sbz2bg.bin"
 		even
-byte_6A2F8:	dc.b 0,	0, 0, 0
-byte_6A2FC:	dc.b 0,	0, 0, 0
 Level_End:	incbin	"levels\ending.bin"
 		even
-byte_6A320:	dc.b 0,	0, 0, 0
 
 
 Art_BigRing:	incbin	"artunc\Giant Ring.bin"
