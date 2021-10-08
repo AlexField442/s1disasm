@@ -3122,7 +3122,7 @@ ColPointers:	dc.l Col_GHZ
 		dc.l Col_SYZ
 		dc.l Col_SBZ
 		zonewarning ColPointers,4
-;		dc.l Col_GHZ ; Pointer for Ending is missing by default.
+		dc.l Col_GHZ ; Pointer for Ending is missing by default.
 
 		include	"_inc\Oscillatory Routines.asm"
 
@@ -3877,7 +3877,7 @@ End_LoadData:
 		bset	#2,(v_fg_scroll_flags).w
 		bsr.w	LevelDataLoad
 		bsr.w	LoadTilesFromStart
-		move.l	#Col_GHZ,(v_collindex).w ; load collision index
+		bsr.w	ColIndexLoad
 		enable_ints
 		lea	(Kos_EndFlowers).l,a0 ;	load extra flower patterns
 		lea	($FFFF9400).w,a1 ; RAM address to buffer the patterns
