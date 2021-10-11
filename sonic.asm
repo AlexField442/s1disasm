@@ -1335,10 +1335,14 @@ loc_16E2:
 
 
 QuickPLC:
-		lea	(ArtLoadCues).l,a1 ; load the PLC index
-		add.w	d0,d0
-		move.w	(a1,d0.w),d0
-		lea	(a1,d0.w),a1
+;		Sonic 3 & Knuckles skips the table all together by making it
+;		load the wanted PLR list directly, effectively making these
+;		lines useless.
+		;lea	(ArtLoadCues).l,a1 ; load the PLC index
+		;add.w	d0,d0
+		;move.w	(a1,d0.w),d0
+		;lea	(a1,d0.w),a1
+
 		move.w	(a1)+,d1	; get length of PLC
 
 	Qplc_Loop:
@@ -3241,7 +3245,7 @@ GM_Special:
 		bne.s	SS_WaitForDMA	; if yes, branch
 		move.w	#$8F02,(a5)	; set VDP increment to 2 bytes
 		bsr.w	SS_BGLoad
-		moveq	#plcid_SpecialStage,d0
+		lea	PLC_SpecialStage(pc),a1
 		bsr.w	QuickPLC	; load special stage patterns
 
 		lea	(v_objspace).w,a1
@@ -3423,6 +3427,38 @@ SS_ToLevel:	cmpi.b	#id_Level,(v_gamemode).w
 		beq.s	SS_ToSegaScreen
 		rts
 		endc
+
+; ---------------------------------------------------------------------------
+; Pattern load cues - special stage
+; ---------------------------------------------------------------------------
+
+plcm:	macro gfx,vram
+	dc.l gfx
+	dc.w vram
+	endm
+
+PLC_SpecialStage:	dc.w ((PLC_SpeStageend-PLC_SpecialStage-2)/6)-1
+		plcm	Nem_SSBgCloud, 0	; bubble and cloud background
+		plcm	Nem_SSBgFish, $A20	; bird and fish	background
+		plcm	Nem_SSWalls, $2840	; walls
+		plcm	Nem_Bumper, $4760	; bumper
+		plcm	Nem_SSGOAL, $4A20	; GOAL block
+		plcm	Nem_SSUpDown, $4C60	; UP and DOWN blocks
+		plcm	Nem_SSRBlock, $5E00	; R block
+		plcm	Nem_SS1UpBlock, $6E00	; 1UP block
+		plcm	Nem_SSEmStars, $7E00	; emerald collection stars
+		plcm	Nem_SSRedWhite, $8E00	; red and white	block
+		plcm	Nem_SSGhost, $9E00	; ghost	block
+		plcm	Nem_SSWBlock, $AE00	; W block
+		plcm	Nem_SSGlass, $BE00	; glass	block
+		plcm	Nem_SSEmerald, $EE00	; emeralds
+		plcm	Nem_SSZone1, $F2E0	; ZONE 1 block
+		plcm	Nem_SSZone2, $F400	; ZONE 2 block
+		plcm	Nem_SSZone3, $F520	; ZONE 3 block
+	PLC_SpeStageend:
+		plcm	Nem_SSZone4, $F2E0	; ZONE 4 block
+		plcm	Nem_SSZone5, $F400	; ZONE 5 block
+		plcm	Nem_SSZone6, $F520	; ZONE 6 block
 
 ; ---------------------------------------------------------------------------
 ; Special stage	background loading subroutine
@@ -3869,7 +3905,7 @@ GM_Ending:
 		move.w	#(id_EndZ<<8)+1,(v_zone).w ; set level number to 0601 (no flowers)
 
 End_LoadData:
-		moveq	#plcid_Ending,d0
+		lea	PLC_Ending(pc),a1
 		bsr.w	QuickPLC	; load ending sequence patterns
 		jsr	(Hud_Base).l
 		bsr.w	LevelSizeLoad
@@ -3989,6 +4025,30 @@ End_ChkEmerald:
 		bsr.w	PalLoad1	; load ending palette
 		bsr.w	PaletteWhiteIn
 		bra.w	End_MainLoop
+
+; ---------------------------------------------------------------------------
+; Pattern load cues - ending sequence
+; ---------------------------------------------------------------------------
+PLC_Ending:	dc.w ((PLC_Endingend-PLC_Ending-2)/6)-1
+		plcm	Nem_GHZ_1st,0		; GHZ main patterns
+		plcm	Nem_GHZ_2nd, $39A0	; GHZ secondary	patterns
+		plcm	Nem_Stalk, $6B00	; flower stalk
+		plcm	Nem_EndFlower, $7400	; flowers
+		plcm	Nem_EndEm, $78A0	; emeralds
+		plcm	Nem_EndSonic, $7C20	; Sonic
+		if Revision=0
+		plcm	Nem_EndEggman, $A480	; Eggman's death ((unused)
+		else
+		endc
+		plcm	Nem_Rabbit, $AA60	; rabbit
+		plcm	Nem_Chicken, $ACA0	; chicken
+		plcm	Nem_BlackBird, $AE60	; blackbird
+		plcm	Nem_Seal, $B0A0		; seal
+		plcm	Nem_Pig, $B260		; pig
+		plcm	Nem_Flicky, $B4A0	; flicky
+		plcm	Nem_Squirrel, $B660	; squirrel
+		plcm	Nem_EndStH, $B8A0	; "SONIC THE HEDGEHOG"
+	PLC_Endingend:
 
 ; ---------------------------------------------------------------------------
 ; Subroutine controlling Sonic on the ending sequence
@@ -4204,7 +4264,7 @@ TryAgainEnd:
 		move.l	d0,(a1)+
 		dbf	d1,TryAg_ClrObjRam ; clear object RAM
 
-		moveq	#plcid_TryAgain,d0
+		lea	PLC_TryAgain(pc),a1
 		bsr.w	QuickPLC	; load "TRY AGAIN" or "END" patterns
 
 		lea	(v_pal_dry_dup).w,a1
@@ -4243,6 +4303,14 @@ TryAg_Exit:
 		move.b	#id_Sega,(v_gamemode).w ; goto Sega screen
 		rts	
 
+; ---------------------------------------------------------------------------
+; Pattern load cues - "TRY AGAIN" and "END" screens
+; ---------------------------------------------------------------------------
+PLC_TryAgain:	dc.w ((PLC_TryAgainend-PLC_TryAgain-2)/6)-1
+		plcm	Nem_EndEm, $78A0	; emeralds
+		plcm	Nem_TryAgain, $7C20	; Eggman
+		plcm	Nem_CreditText, $B400	; credits alphabet
+	PLC_TryAgainend:
 ; ===========================================================================
 
 		include	"_incObj\8B Try Again & End Eggman.asm"
