@@ -130,7 +130,7 @@ ReactToItem:
 		andi.b	#$3F,d0
 		cmpi.b	#6,d0		; is collision type $46	?
 		beq.s	React_Monitor	; if yes, branch
-		cmpi.w	#90,$30(a0)	; is Sonic invincible?
+		cmpi.b	#90,flashtime(a0)	; is Sonic invincible?
 		bcc.w	@invincible	; if yes, branch
 		addq.b	#2,obRoutine(a1) ; advance the object's routine counter
 
@@ -243,7 +243,7 @@ React_ChkHurt:
 
 	@notinvincible:
 		nop	
-		tst.w	$30(a0)		; is Sonic flashing?
+		tst.b	flashtime(a0)	; is Sonic flashing?
 		bne.s	@isflashing	; if yes, branch
 		movea.l	a1,a2
 
@@ -291,7 +291,7 @@ HurtSonic:
 	@isleft:
 		move.w	#0,obInertia(a0)
 		move.b	#id_Hurt,obAnim(a0)
-		move.w	#120,$30(a0)	; set temp invincible time to 2 seconds
+		move.b	#120,flashtime(a0)	; set temp invincible time to 2 seconds
 		move.w	#sfx_Death,d0	; load normal damage sound
 		cmpi.b	#id_Spikes,(a2)	; was damage caused by spikes?
 		bne.s	@sound		; if not, branch

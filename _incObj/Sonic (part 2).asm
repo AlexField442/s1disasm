@@ -38,7 +38,7 @@ Sonic_HurtStop:
 		move.w	d0,obInertia(a0)
 		move.b	#id_Walk,obAnim(a0)
 		subq.b	#2,obRoutine(a0)
-		move.w	#$78,$30(a0)
+		move.b	#$78,flashtime(a0)
 
 locret_13860:
 		rts	
