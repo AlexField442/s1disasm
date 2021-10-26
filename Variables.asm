@@ -11,7 +11,9 @@ v_ngfx_buffer:	equ $FFFFAA00	; Nemesis graphics decompression buffer ($200 bytes
 v_spritequeue:	equ $FFFFAC00	; sprite display queue, in order of priority ($400 bytes)
 v_16x16:		equ $FFFFB000	; 16x16 tile mappings
 
-v_sgfx_buffer:	equ $FFFFC800	; buffered Sonic graphics ($17 cells) ($2E0 bytes)
+v_vdpcomm:	equ $FFFFC800	; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called ($FC bytes)
+v_vdpcommbuf:	equ $FFFFC8FC	; stores the address of the next open slot for a queued VDP command (4 bytes)
+
 v_tracksonic:	equ $FFFFCB00	; position tracking data for Sonic ($100 bytes)
 v_hscrolltablebuffer:	equ $FFFFCC00 ; scrolling table data (actually $380 bytes, but $400 is reserved for it)
 v_objspace:	equ $FFFFD000	; object variable space ($40 bytes per object) ($2000 bytes)
@@ -186,7 +188,6 @@ v_sonspeedmax:	equ $FFFFF760	; Sonic's maximum speed (2 bytes)
 v_sonspeedacc:	equ $FFFFF762	; Sonic's acceleration (2 bytes)
 v_sonspeeddec:	equ $FFFFF764	; Sonic's deceleration (2 bytes)
 v_sonframenum:	equ $FFFFF766	; frame to display for Sonic
-f_sonframechg:	equ $FFFFF767	; flag set to update Sonic's sprite frame
 v_anglebuffer:	equ $FFFFF768	; angle of collision block that Sonic or object is standing on
 
 v_opl_routine:	equ $FFFFF76C	; ObjPosLoad - routine counter

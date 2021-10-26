@@ -677,11 +677,7 @@ VBla_08:
 
 		writeVRAM	v_hscrolltablebuffer,$380,vram_hscroll
 		writeVRAM	v_spritetablebuffer,$280,vram_sprites
-		tst.b	(f_sonframechg).w ; has Sonic's sprite changed?
-		beq.s	@nochg		; if not, branch
-
-		writeVRAM	v_sgfx_buffer,$2E0,vram_sonic ; load new Sonic gfx
-		move.b	#0,(f_sonframechg).w
+		jsr	(ProcessDMAQueue).l
 
 	@nochg:
 		startZ80
@@ -726,11 +722,7 @@ VBla_0A:
 		writeVRAM	v_hscrolltablebuffer,$380,vram_hscroll
 		startZ80
 		bsr.w	PalCycle_SS
-		tst.b	(f_sonframechg).w ; has Sonic's sprite changed?
-		beq.s	@nochg		; if not, branch
-
-		writeVRAM	v_sgfx_buffer,$2E0,vram_sonic ; load new Sonic gfx
-		move.b	#0,(f_sonframechg).w
+		jsr	(ProcessDMAQueue).l
 
 	@nochg:
 		tst.w	(v_demolength).w	; is there time left on the demo?
@@ -758,10 +750,7 @@ VBla_0C:
 		move.w	(v_hbla_hreg).w,(a5)
 		writeVRAM	v_hscrolltablebuffer,$380,vram_hscroll
 		writeVRAM	v_spritetablebuffer,$280,vram_sprites
-		tst.b	(f_sonframechg).w
-		beq.s	@nochg
-		writeVRAM	v_sgfx_buffer,$2E0,vram_sonic
-		move.b	#0,(f_sonframechg).w
+		jsr	(ProcessDMAQueue).l
 
 	@nochg:
 		startZ80
@@ -797,10 +786,7 @@ VBla_16:
 		writeVRAM	v_spritetablebuffer,$280,vram_sprites
 		writeVRAM	v_hscrolltablebuffer,$380,vram_hscroll
 		startZ80
-		tst.b	(f_sonframechg).w
-		beq.s	@nochg
-		writeVRAM	v_sgfx_buffer,$2E0,vram_sonic
-		move.b	#0,(f_sonframechg).w
+		jsr	(ProcessDMAQueue).l
 
 	@nochg:
 		tst.w	(v_demolength).w
@@ -1116,6 +1102,104 @@ TilemapToVRAM:
 		dbf	d2,Tilemap_Line	; next line
 		rts	
 ; End of function TilemapToVRAM
+
+; ---------------------------------------------------------------------------
+; Subroutine for queueing VDP commands (seems to only queue transfers to VRAM),
+; to be issued the next time ProcessDMAQueue is called.
+; Can be called a maximum of 18 times before the buffer needs to be cleared
+; by issuing the commands (this subroutine DOES check for overflow)
+; ---------------------------------------------------------------------------
+; In case you wish to use this queue system outside of the spin dash, this is the
+; registers in which it expects data in:
+; d1.l: Address to data (In 68k address space)
+; d2.w: Destination in VRAM
+; d3.w: Length of data
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+; sub_144E: DMA_68KtoVRAM: QueueCopyToVRAM: QueueVDPCommand: Add_To_DMA_Queue:
+QueueDMATransfer:
+		movea.l	(v_vdpcommbuf).w,a1
+		cmpa.w	#v_vdpcommbuf,a1
+		beq.s	QueueDMATransfer_Done ; return if there's no more room in the buffer
+
+		; piece together some VDP commands and store them for later...
+		move.w	#$9300,d0 ; command to specify DMA transfer length & $00FF
+		move.b	d3,d0
+		move.w	d0,(a1)+ ; store command
+
+		move.w	#$9400,d0 ; command to specify DMA transfer length & $FF00
+		lsr.w	#8,d3
+		move.b	d3,d0
+		move.w	d0,(a1)+ ; store command
+
+		move.w	#$9500,d0 ; command to specify source address & $0001FE
+		lsr.l	#1,d1
+		move.b	d1,d0
+		move.w	d0,(a1)+ ; store command
+
+		move.w	#$9600,d0 ; command to specify source address & $01FE00
+		lsr.l	#8,d1
+		move.b	d1,d0
+		move.w	d0,(a1)+ ; store command
+
+		move.w	#$9700,d0 ; command to specify source address & $FE0000
+		lsr.l	#8,d1
+		andi.b	#$7F,d1		; this instruction safely allows source to be in RAM; S3K added this
+		move.b	d1,d0
+		move.w	d0,(a1)+ ; store command
+
+		andi.l	#$FFFF,d2 ; command to specify destination address and begin DMA
+		lsl.l	#2,d2
+		lsr.w	#2,d2
+		swap	d2
+		ori.l	#$40000080,d2 ; set bits to specify VRAM transfer
+		move.l	d2,(a1)+ ; store command
+
+		move.l	a1,($FFFFC8FC).w ; set the next free slot address
+		cmpa.w	#v_vdpcommbuf,a1
+		beq.s	QueueDMATransfer_Done ; return if there's no more room in the buffer
+		move.w	#0,(a1) ; put a stop token at the end of the used part of the buffer
+; return_14AA:
+QueueDMATransfer_Done:
+		rts
+; End of function QueueDMATransfer
+
+
+; ---------------------------------------------------------------------------
+; Subroutine for issuing all VDP commands that were queued
+; (by earlier calls to QueueDMATransfer)
+; Resets the queue when it's done
+; ---------------------------------------------------------------------------
+
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+
+; sub_14AC: CopyToVRAM: IssueVDPCommands: Process_DMA: Process_DMA_Queue:
+ProcessDMAQueue:
+		lea	(vdp_control_port).l,a5
+		lea	(v_vdpcomm).w,a1
+; loc_14B6:
+ProcessDMAQueue_Loop:
+		move.w	(a1)+,d0
+		beq.s	ProcessDMAQueue_Done ; branch if we reached a stop token
+		; issue a set of VDP commands...
+		move.w	d0,(a5)		; transfer length
+		move.w	(a1)+,(a5)	; transfer length
+		move.w	(a1)+,(a5)	; source address
+		move.w	(a1)+,(a5)	; source address
+		move.w	(a1)+,(a5)	; source address
+		move.w	(a1)+,(a5)	; destination
+		move.w	(a1)+,(a5)	; destination
+		cmpa.w	#v_vdpcommbuf,a1
+		bne.s	ProcessDMAQueue_Loop ; loop if we haven't reached the end of the buffer
+; loc_14CE:
+ProcessDMAQueue_Done:
+		move.w	#0,(v_vdpcomm).w
+		move.l	#v_vdpcomm,(v_vdpcommbuf).w
+		rts
+; End of function ProcessDMAQueue
+
 
 		include	"_inc\Nemesis Decompression.asm"
 
@@ -2765,7 +2849,14 @@ GM_Level:
 		enable_ints
 		moveq	#0,d0
 		move.b	(v_zone).w,d0
-		lsl.w	#4,d0
+
+		; multiply d0 by 12, the size of a level art load block
+		add.w	d0,d0
+		add.w	d0,d0
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+
 		lea	(LevelHeaders).l,a2
 		lea	(a2,d0.w),a2
 		moveq	#0,d0
@@ -2822,6 +2913,8 @@ Level_ClrRam:
 		move.w	#$8720,(a6)		; set background colour (line 3; colour 0)
 		move.w	#$8A00+223,(v_hbla_hreg).w ; set palette change position (for water)
 		move.w	(v_hbla_hreg).w,(a6)
+		clr.w	(v_vdpcomm).w
+		move.l	#v_vdpcomm,(v_vdpcommbuf).w
 		cmpi.b	#id_LZ,(v_zone).w ; is level LZ?
 		bne.s	Level_LoadPal	; if not, branch
 
@@ -3382,6 +3475,8 @@ loc_47D4:
 		lea	(Nem_TitleCard).l,a0 ; load title card patterns
 		bsr.w	NemDec
 		jsr	(Hud_Base).l
+		clr.w	(v_vdpcomm).w
+		move.l	#v_vdpcomm,(v_vdpcommbuf).w
 		enable_ints
 		moveq	#palid_SSResult,d0
 		bsr.w	PalLoad2	; load results screen palette
@@ -4158,7 +4253,14 @@ GM_Credits:
 		bsr.w	EndingDemoLoad
 		moveq	#0,d0
 		move.b	(v_zone).w,d0
-		lsl.w	#4,d0
+
+		; multiply d0 by 12, the size of a level art load block
+		add.w	d0,d0
+		add.w	d0,d0
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+
 		lea	(LevelHeaders).l,a2
 		lea	(a2,d0.w),a2
 		moveq	#0,d0
@@ -5316,7 +5418,14 @@ DrawChunks:
 LevelDataLoad:
 		moveq	#0,d0
 		move.b	(v_zone).w,d0
-		lsl.w	#4,d0
+
+		; multiply d0 by 12, the size of a level art load block
+		add.w	d0,d0
+		add.w	d0,d0
+		move.w	d0,d1
+		add.w	d0,d0
+		add.w	d1,d0
+
 		lea	(LevelHeaders).l,a2
 		lea	(a2,d0.w),a2
 		move.l	a2,-(sp)
@@ -5329,24 +5438,6 @@ LevelDataLoad:
 		lea	(v_256x256).l,a1 ; RAM address for 256x256 mappings
 		bsr.w	KosDec
 		bsr.w	LevelLayoutLoad
-		move.w	(a2)+,d0
-		move.w	(a2),d0
-		andi.w	#$FF,d0
-		cmpi.w	#(id_LZ<<8)+3,(v_zone).w ; is level SBZ3 (LZ4) ?
-		bne.s	@notSBZ3	; if not, branch
-		moveq	#palid_SBZ3,d0	; use SB3 palette
-
-	@notSBZ3:
-		cmpi.w	#(id_SBZ<<8)+1,(v_zone).w ; is level SBZ2?
-		beq.s	@isSBZorFZ	; if yes, branch
-		cmpi.w	#(id_SBZ<<8)+2,(v_zone).w ; is level FZ?
-		bne.s	@normalpal	; if not, branch
-
-	@isSBZorFZ:
-		moveq	#palid_SBZ2,d0	; use SBZ2/FZ palette
-
-	@normalpal:
-		bsr.w	PalLoad1	; load palette (based on d0)
 		movea.l	(sp)+,a2
 		addq.w	#4,a2		; read number for 2nd PLC
 		moveq	#0,d0
@@ -5354,8 +5445,26 @@ LevelDataLoad:
 		beq.s	@skipPLC	; if 2nd PLC is 0 (i.e. the ending sequence), branch
 		bsr.w	AddPLC		; load pattern load cues
 
-	@skipPLC:
-		rts	
+@skipPLC:
+		addq.w	#4,a2
+		moveq	#0,d0
+		move.b	(a2),d0	; palette ID
+		move.w	(v_zone).w,d1
+		cmpi.w	#(id_LZ<<8)+3,d1	; is level SBZ3 (LZ4) ?
+		bne.s	@notSBZ3		; if not, branch
+		moveq	#palid_SBZ3,d0		; use SB3 palette
+
+	@notSBZ3:
+		cmpi.w	#(id_SBZ<<8)+1,d1	; is level SBZ2?
+		beq.s	@isSBZorFZ		; if yes, branch
+		cmpi.w	#(id_SBZ<<8)+2,d1	; is level FZ?
+		bne.s	@normalpal		; if not, branch
+
+	@isSBZorFZ:
+		moveq	#palid_SBZ2,d0	; use SBZ2/FZ palette
+
+	@normalpal:
+		bra.w	PalLoad1	; load palette (based on d0)
 ; End of function LevelDataLoad
 
 ; ---------------------------------------------------------------------------
