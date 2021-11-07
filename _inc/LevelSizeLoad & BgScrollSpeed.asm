@@ -60,7 +60,7 @@ LevelSizeArray:
 		dc.w $0000, $1E40, $FF00, $0800
 		dc.w $2080, $2460, $0510, $0510
 		dc.w $0000, $3EC0, $0000, $0720
-		zonewarning LevelSizeArray,$30
+		zonewarning LevelSizeArray,$20
 		; Ending
 		dc.w $0000, $0500, $0110, $0110
 		dc.w $0000, $0DC0, $0110, $0110
